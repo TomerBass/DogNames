@@ -381,10 +381,10 @@ function displayResults(dogs) {
         const bannerColor = getRandomColor();
 
         card.innerHTML = `
+            ${imageHtml}
             <div class="dog-name-banner" style="background-color: ${bannerColor}">
                 ${escapeHtml(dog.name)}
             </div>
-            ${imageHtml}
             <div class="dog-card-info">
                 <div class="dog-card-date">${date}</div>
                 ${detailsHtml}
