@@ -354,6 +354,80 @@ body {
     font-family: inherit;
 }
 
+/* Details Modal */
+.details-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 10000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    animation: fadeIn 0.3s;
+}
+
+.details-modal-content {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    max-width: 500px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    position: relative;
+    animation: slideUp 0.3s;
+    direction: rtl;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.details-modal-close {
+    position: absolute;
+    top: 10px;
+    left: 15px;
+    font-size: 30px;
+    color: #6d4c41;
+    cursor: pointer;
+    transition: color 0.3s;
+}
+
+.details-modal-close:hover {
+    color: #3e2723;
+}
+
+#detailsModalBody h2 {
+    text-align: center;
+    color: #6d4c41;
+    margin-bottom: 20px;
+    font-size: 1.8rem;
+}
+
+#detailsModalBody .detail-item {
+    padding: 12px;
+    margin: 10px 0;
+    background: #f5f1ed;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    color: #3e2723;
+}
+
+#detailsModalBody .detail-label {
+    font-weight: 600;
+    color: #6d4c41;
+}
+
 /* Lightbox */
 .lightbox {
     position: fixed;

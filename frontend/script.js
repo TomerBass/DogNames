@@ -23,6 +23,9 @@ const lightboxImage = document.getElementById('lightboxImage');
 const lightboxClose = document.querySelector('.lightbox-close');
 const lightboxPrev = document.getElementById('lightboxPrev');
 const lightboxNext = document.getElementById('lightboxNext');
+const detailsModal = document.getElementById('detailsModal');
+const detailsModalBody = document.getElementById('detailsModalBody');
+const detailsModalClose = document.querySelector('.details-modal-close');
 
 // Lightbox state
 let currentImages = [];
@@ -385,26 +388,36 @@ function displayResults(dogs) {
             <div class="dog-name-banner" style="background-color: ${bannerColor}">
                 ${escapeHtml(dog.name)}
             </div>
-            <div class="dog-card-info">
-                <div class="dog-card-date">${date}</div>
-                ${detailsHtml}
-            </div>
         `;
+
+        // Store dog data on card for modal
+        card.dataset.dogData = JSON.stringify({
+            name: dog.name,
+            date: date,
+            age: dog.age,
+            adoption_date: dog.adoption_date,
+            location: dog.location,
+            city: dog.city
+        });
 
         // Add click handlers to all images in the card
         card.querySelectorAll = card.querySelectorAll || document.querySelectorAll.bind(card);
         resultsGrid.appendChild(card);
 
-        // Add click handlers after card is in DOM
-        const cardImages = card.querySelectorAll('img');
-        cardImages.forEach((img) => {
-            img.addEventListener('click', (e) => {
+        // Add click handler to card to show details
+        card.addEventListener('click', (e) => {
+            // Check if clicking on image for lightbox
+            if (e.target.tagName === 'IMG') {
                 e.stopPropagation();
-                const index = parseInt(img.getAttribute('data-index')) || 0;
+                const index = parseInt(e.target.getAttribute('data-index')) || 0;
                 openLightbox(images, index);
-            });
-            img.style.cursor = 'pointer';
+            } else {
+                // Otherwise show details modal
+                showDetailsModal(card.dataset.dogData);
+            }
         });
+
+        card.style.cursor = 'pointer';
     });
 }
 
@@ -514,6 +527,48 @@ function showNextImage() {
     showLightboxImage();
 }
 
+/**
+ * Show details modal
+ */
+function showDetailsModal(dogDataJson) {
+    const dogData = JSON.parse(dogDataJson);
+
+    let detailsHtml = `<h2>${escapeHtml(dogData.name)}</h2>`;
+
+    if (dogData.date) {
+        detailsHtml += `<div class="detail-item"><span class="detail-label">תאריך העלאה:</span> ${dogData.date}</div>`;
+    }
+
+    if (dogData.age) {
+        detailsHtml += `<div class="detail-item"><span class="detail-label">גיל:</span> ${escapeHtml(dogData.age)}</div>`;
+    }
+
+    if (dogData.adoption_date) {
+        const adoptDate = formatDateDDMMYYYY(new Date(dogData.adoption_date));
+        detailsHtml += `<div class="detail-item"><span class="detail-label">תאריך אימוץ:</span> ${adoptDate}</div>`;
+    }
+
+    if (dogData.location) {
+        detailsHtml += `<div class="detail-item"><span class="detail-label">מאיפה אומץ:</span> ${escapeHtml(dogData.location)}</div>`;
+    }
+
+    if (dogData.city) {
+        detailsHtml += `<div class="detail-item"><span class="detail-label">עיר מגורים:</span> ${escapeHtml(dogData.city)}</div>`;
+    }
+
+    detailsModalBody.innerHTML = detailsHtml;
+    detailsModal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+/**
+ * Close details modal
+ */
+function closeDetailsModal() {
+    detailsModal.style.display = 'none';
+    document.body.style.overflow = '';
+}
+
 // Lightbox event listeners
 lightboxClose.addEventListener('click', closeLightbox);
 lightbox.addEventListener('click', (e) => {
@@ -524,12 +579,23 @@ lightbox.addEventListener('click', (e) => {
 lightboxPrev.addEventListener('click', showPrevImage);
 lightboxNext.addEventListener('click', showNextImage);
 
-// Keyboard navigation for lightbox
+// Details modal event listeners
+detailsModalClose.addEventListener('click', closeDetailsModal);
+detailsModal.addEventListener('click', (e) => {
+    if (e.target === detailsModal) {
+        closeDetailsModal();
+    }
+});
+
+// Keyboard navigation for lightbox and details modal
 document.addEventListener('keydown', (e) => {
     if (lightbox.style.display === 'flex') {
         if (e.key === 'Escape') closeLightbox();
         if (e.key === 'ArrowLeft') showPrevImage();
         if (e.key === 'ArrowRight') showNextImage();
+    }
+    if (detailsModal.style.display === 'flex') {
+        if (e.key === 'Escape') closeDetailsModal();
     }
 });
 
