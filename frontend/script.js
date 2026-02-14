@@ -227,7 +227,7 @@ async function isDogImage(file) {
                     console.log('Predictions:', predictions);
 
                     // Check if any prediction includes dog-related terms
-                    // Using low threshold (0.05) to be lenient
+                    // Using very low threshold (0.005 = 0.5%) to be extremely lenient
                     const dogRelated = predictions.some(pred => {
                         const className = pred.className.toLowerCase();
                         return (
@@ -246,11 +246,25 @@ async function isDogImage(file) {
                             className.includes('dachshund') ||
                             className.includes('husky') ||
                             className.includes('pug') ||
-                            className.includes('labrador')
-                        ) && pred.probability > 0.05; // Very low threshold
+                            className.includes('labrador') ||
+                            className.includes('canine') ||
+                            className.includes('pet') ||
+                            className.includes('animal')
+                        ) && pred.probability > 0.005; // Extremely low threshold (0.5%)
                     });
 
-                    resolve(dogRelated);
+                    // Fallback: if it detects any mammal/animal, probably a dog
+                    const possiblyAnimal = predictions.some(pred => {
+                        const className = pred.className.toLowerCase();
+                        return (
+                            className.includes('mammal') ||
+                            className.includes('fur') ||
+                            className.includes('animal') ||
+                            className.includes('creature')
+                        ) && pred.probability > 0.1;
+                    });
+
+                    resolve(dogRelated || possiblyAnimal);
                 } catch (error) {
                     console.error('Error classifying image:', error);
                     resolve(true); // On error, allow upload
