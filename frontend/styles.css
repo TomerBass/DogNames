@@ -160,10 +160,40 @@ body {
     transition: transform 0.2s;
     display: flex;
     flex-direction: column;
+    position: relative;
 }
 
 .dog-card:hover {
     transform: translateY(-4px);
+}
+
+/* Delete button */
+.delete-btn {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    z-index: 10;
+    background: rgba(255, 255, 255, 0.95);
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    font-size: 18px;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.delete-btn:hover {
+    background: #ff4444;
+    transform: scale(1.1);
+}
+
+.delete-btn:active {
+    transform: scale(0.95);
 }
 
 /* Dog Name Banner - Balloon style below image */
@@ -601,6 +631,14 @@ body {
 
     .dog-card {
         max-width: 100%;
+    }
+
+    .delete-btn {
+        width: 28px;
+        height: 28px;
+        font-size: 14px;
+        top: 4px;
+        left: 4px;
     }
 
     .dog-card img,

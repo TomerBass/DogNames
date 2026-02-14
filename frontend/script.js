@@ -34,6 +34,44 @@ let currentImageIndex = 0;
 // Debounce for search
 let searchTimeout;
 
+// LocalStorage key for uploaded dogs
+const UPLOADED_DOGS_KEY = 'uploadedDogs';
+
+/**
+ * Get list of uploaded dog IDs from localStorage
+ */
+function getUploadedDogs() {
+    const stored = localStorage.getItem(UPLOADED_DOGS_KEY);
+    return stored ? JSON.parse(stored) : [];
+}
+
+/**
+ * Add dog ID to uploaded list
+ */
+function addUploadedDog(dogId) {
+    const uploaded = getUploadedDogs();
+    if (!uploaded.includes(dogId)) {
+        uploaded.push(dogId);
+        localStorage.setItem(UPLOADED_DOGS_KEY, JSON.stringify(uploaded));
+    }
+}
+
+/**
+ * Remove dog ID from uploaded list
+ */
+function removeUploadedDog(dogId) {
+    const uploaded = getUploadedDogs();
+    const filtered = uploaded.filter(id => id !== dogId);
+    localStorage.setItem(UPLOADED_DOGS_KEY, JSON.stringify(filtered));
+}
+
+/**
+ * Check if dog was uploaded by this session
+ */
+function isMyDog(dogId) {
+    return getUploadedDogs().includes(dogId);
+}
+
 // MobileNet model for dog detection
 let model = null;
 
@@ -270,6 +308,11 @@ async function handleUpload(e) {
 
         const data = await response.json();
 
+        // Store dog ID in localStorage for deletion capability
+        if (data.dog && data.dog.id) {
+            addUploadedDog(data.dog.id);
+        }
+
         // Show success
         showSuccess('הכלב הועלה בהצלחה! 🐶');
 
@@ -383,7 +426,12 @@ function displayResults(dogs) {
         // Get random color for name banner
         const bannerColor = getRandomColor();
 
+        // Check if this dog was uploaded by current session
+        const canDelete = isMyDog(dog.id);
+        const deleteButton = canDelete ? `<button class="delete-btn" data-dog-id="${dog.id}" title="מחק כלב">🗑️</button>` : '';
+
         card.innerHTML = `
+            ${deleteButton}
             ${imageHtml}
             <div class="dog-name-banner" style="background-color: ${bannerColor}">
                 ${escapeHtml(dog.name)}
@@ -404,8 +452,23 @@ function displayResults(dogs) {
         card.querySelectorAll = card.querySelectorAll || document.querySelectorAll.bind(card);
         resultsGrid.appendChild(card);
 
+        // Add delete button handler if present
+        const deleteBtn = card.querySelector('.delete-btn');
+        if (deleteBtn) {
+            deleteBtn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                const dogId = parseInt(e.currentTarget.getAttribute('data-dog-id'));
+                await deleteDog(dogId, dog.name);
+            });
+        }
+
         // Add click handler to card to show details
         card.addEventListener('click', (e) => {
+            // Check if clicking on delete button
+            if (e.target.classList.contains('delete-btn')) {
+                e.stopPropagation();
+                return;
+            }
             // Check if clicking on image for lightbox
             if (e.target.tagName === 'IMG') {
                 e.stopPropagation();
@@ -419,6 +482,44 @@ function displayResults(dogs) {
 
         card.style.cursor = 'pointer';
     });
+}
+
+/**
+ * Delete a dog
+ */
+async function deleteDog(dogId, dogName) {
+    // Confirm deletion
+    const confirmed = confirm(`האם אתה בטוח שברצונך למחוק את ${dogName}? לא ניתן לבטל פעולה זו.`);
+    if (!confirmed) return;
+
+    try {
+        showLoading();
+
+        const response = await fetch(`${API_BASE_URL}/api/dogs/${dogId}`, {
+            method: 'DELETE'
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to delete dog');
+        }
+
+        // Remove from localStorage
+        removeUploadedDog(dogId);
+
+        // Show success message
+        showSuccess(`${dogName} נמחק בהצלחה`);
+
+        // Reload dogs
+        setTimeout(() => {
+            loadAllDogs();
+        }, 1000);
+
+    } catch (error) {
+        console.error('Error deleting dog:', error);
+        showError(`Failed to delete dog: ${error.message}`);
+    } finally {
+        hideLoading();
+    }
 }
 
 /**
