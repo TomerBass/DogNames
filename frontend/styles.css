@@ -54,13 +54,30 @@ body {
 }
 
 /* Search Component */
+.search-wrapper {
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.search-icon {
+    position: absolute;
+    left: 16px;
+    font-size: 1.2rem;
+    color: #6d4c41;
+    pointer-events: none;
+    z-index: 1;
+}
+
 #searchInput {
     width: 100%;
-    padding: 12px 16px;
+    padding: 12px 50px 12px 16px;
     font-size: 1rem;
     border: 2px solid #d7ccc8;
-    border-radius: 6px;
+    border-radius: 30px;
     transition: border-color 0.2s;
+    background: white;
 }
 
 #searchInput:focus {
