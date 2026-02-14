@@ -1,0 +1,528 @@
+// Auto-detect environment: use localhost for local development, otherwise use deployed backend
+const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://localhost:8000'  // Local development
+    : 'https://dogfinder-backend.onrender.com';  // Production (UPDATE THIS URL after deploying!)
+
+// DOM Elements
+const searchInput = document.getElementById('searchInput');
+const uploadForm = document.getElementById('uploadForm');
+const resultsGrid = document.getElementById('resultsGrid');
+const loadingEl = document.getElementById('loadingSpinner');
+const errorEl = document.getElementById('errorMessage');
+const successEl = document.getElementById('successMessage');
+const dogNameInput = document.getElementById('dogName');
+const hebrewWarning = document.getElementById('hebrewWarning');
+const toggleDetailsBtn = document.getElementById('toggleDetails');
+const optionalFields = document.getElementById('optionalFields');
+const dogAgeInput = document.getElementById('dogAge');
+const dogLocationInput = document.getElementById('dogLocation');
+const dogCityInput = document.getElementById('dogCity');
+const optionalHebrewWarning = document.getElementById('optionalHebrewWarning');
+const lightbox = document.getElementById('lightbox');
+const lightboxImage = document.getElementById('lightboxImage');
+const lightboxClose = document.querySelector('.lightbox-close');
+const lightboxPrev = document.getElementById('lightboxPrev');
+const lightboxNext = document.getElementById('lightboxNext');
+
+// Lightbox state
+let currentImages = [];
+let currentImageIndex = 0;
+
+// Debounce for search
+let searchTimeout;
+
+// MobileNet model for dog detection
+let model = null;
+
+// Initialize
+window.addEventListener('DOMContentLoaded', async () => {
+    loadAllDogs();
+    // Load MobileNet model for dog detection
+    try {
+        console.log('Loading dog detection model...');
+        model = await mobilenet.load();
+        console.log('Dog detection model loaded!');
+    } catch (error) {
+        console.error('Failed to load dog detection model:', error);
+    }
+});
+
+// Search as you type
+searchInput.addEventListener('input', () => {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(handleSearch, 300);
+});
+
+// Upload form
+uploadForm.addEventListener('submit', handleUpload);
+
+// Hebrew detection on dog name input
+dogNameInput.addEventListener('input', checkHebrewInput);
+
+// Hebrew detection on optional fields
+dogAgeInput.addEventListener('input', checkOptionalFieldsHebrew);
+dogLocationInput.addEventListener('input', checkOptionalFieldsHebrew);
+dogCityInput.addEventListener('input', checkOptionalFieldsHebrew);
+
+// Toggle optional details
+toggleDetailsBtn.addEventListener('click', toggleOptionalFields);
+
+/**
+ * Check if input contains English and show warning
+ */
+function checkHebrewInput() {
+    const text = dogNameInput.value;
+    // Check if text contains English letters (a-z, A-Z)
+    const hasEnglish = /[a-zA-Z]/.test(text);
+
+    if (hasEnglish) {
+        hebrewWarning.style.display = 'block';
+    } else {
+        hebrewWarning.style.display = 'none';
+    }
+}
+
+/**
+ * Check if optional fields contain English and show warning
+ */
+function checkOptionalFieldsHebrew() {
+    const ageText = dogAgeInput.value;
+    const locationText = dogLocationInput.value;
+    const cityText = dogCityInput.value;
+
+    // Check if any of the fields contain English letters
+    const hasEnglish = /[a-zA-Z]/.test(ageText) ||
+                       /[a-zA-Z]/.test(locationText) ||
+                       /[a-zA-Z]/.test(cityText);
+
+    if (hasEnglish) {
+        optionalHebrewWarning.style.display = 'block';
+    } else {
+        optionalHebrewWarning.style.display = 'none';
+    }
+}
+
+/**
+ * Toggle optional fields visibility
+ */
+function toggleOptionalFields() {
+    if (optionalFields.style.display === 'none') {
+        optionalFields.style.display = 'flex';
+        toggleDetailsBtn.textContent = '- הסתר פרטים';
+    } else {
+        optionalFields.style.display = 'none';
+        toggleDetailsBtn.textContent = '+ הוסף פרטים';
+    }
+}
+
+/**
+ * Load all dogs
+ */
+async function loadAllDogs() {
+    try {
+        showLoading();
+        const response = await fetch(`${API_BASE_URL}/api/dogs`);
+
+        if (!response.ok) {
+            throw new Error(`Server error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        displayResults(data.dogs);
+    } catch (error) {
+        console.error('Error:', error);
+        showError(`Failed to load dogs. Is the backend running? (${error.message})`);
+    } finally {
+        hideLoading();
+    }
+}
+
+/**
+ * Handle search
+ */
+async function handleSearch() {
+    const searchTerm = searchInput.value.trim();
+
+    try {
+        showLoading();
+        hideError();
+
+        const url = searchTerm
+            ? `${API_BASE_URL}/api/search?name=${encodeURIComponent(searchTerm)}`
+            : `${API_BASE_URL}/api/dogs`;
+
+        const response = await fetch(url);
+
+        if (!response.ok) {
+            throw new Error(`Server error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        displayResults(data.dogs);
+    } catch (error) {
+        console.error('Error:', error);
+        showError(`Search failed. Is the backend running? (${error.message})`);
+    } finally {
+        hideLoading();
+    }
+}
+
+/**
+ * Check if image contains a dog using MobileNet
+ */
+async function isDogImage(file) {
+    if (!model) {
+        console.warn('Model not loaded, skipping dog detection');
+        return true; // If model isn't loaded, allow upload
+    }
+
+    return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            const img = new Image();
+            img.onload = async () => {
+                try {
+                    const predictions = await model.classify(img);
+                    console.log('Predictions:', predictions);
+
+                    // Check if any prediction includes dog-related terms
+                    // Using low threshold (0.05) to be lenient
+                    const dogRelated = predictions.some(pred => {
+                        const className = pred.className.toLowerCase();
+                        return (
+                            className.includes('dog') ||
+                            className.includes('puppy') ||
+                            className.includes('hound') ||
+                            className.includes('retriever') ||
+                            className.includes('terrier') ||
+                            className.includes('poodle') ||
+                            className.includes('shepherd') ||
+                            className.includes('spaniel') ||
+                            className.includes('beagle') ||
+                            className.includes('bulldog') ||
+                            className.includes('chihuahua') ||
+                            className.includes('corgi') ||
+                            className.includes('dachshund') ||
+                            className.includes('husky') ||
+                            className.includes('pug') ||
+                            className.includes('labrador')
+                        ) && pred.probability > 0.05; // Very low threshold
+                    });
+
+                    resolve(dogRelated);
+                } catch (error) {
+                    console.error('Error classifying image:', error);
+                    resolve(true); // On error, allow upload
+                }
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
+/**
+ * Handle upload
+ */
+async function handleUpload(e) {
+    e.preventDefault();
+
+    const formData = new FormData(uploadForm);
+    const files = formData.getAll('files');
+
+    // Validate that all images contain dogs
+    try {
+        hideError();
+
+        // Show validation message
+        if (model && files.length > 0) {
+            loadingEl.textContent = 'מוודא שהתמונות מכילות כלבים... 🐕';
+            showLoading();
+        } else {
+            showLoading();
+        }
+
+        for (const file of files) {
+            const hasDog = await isDogImage(file);
+            if (!hasDog) {
+                hideLoading();
+                loadingEl.textContent = 'Loading...';
+                showError(`התמונה "${file.name}" לא נראית כמו תמונה של כלב. אנא העלה תמונות של כלבים בלבד. 🐶`);
+                return;
+            }
+        }
+
+        // Change loading message to uploading
+        loadingEl.textContent = 'מעלה תמונות...';
+
+        const response = await fetch(`${API_BASE_URL}/api/upload`, {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.detail || 'Upload failed');
+        }
+
+        const data = await response.json();
+
+        // Show success
+        showSuccess('הכלב הועלה בהצלחה! 🐶');
+
+        // Reset form
+        uploadForm.reset();
+        hebrewWarning.style.display = 'none';
+        optionalHebrewWarning.style.display = 'none';
+        optionalFields.style.display = 'none';
+        toggleDetailsBtn.textContent = '+ הוסף פרטים';
+
+        // Reload dogs
+        setTimeout(() => {
+            loadAllDogs();
+        }, 1000);
+
+    } catch (error) {
+        console.error('Error:', error);
+        showError(`Upload failed: ${error.message}`);
+    } finally {
+        hideLoading();
+        loadingEl.textContent = 'Loading...';
+    }
+}
+
+/**
+ * Get full image URL (handles both Cloudinary URLs and local filenames)
+ */
+function getImageUrl(imageIdentifier) {
+    // If it's already a full URL (Cloudinary), return as-is
+    if (imageIdentifier.startsWith('http://') || imageIdentifier.startsWith('https://')) {
+        return imageIdentifier;
+    }
+    // Otherwise, it's a local filename - prepend API base URL
+    return `${API_BASE_URL}/uploads/${imageIdentifier}`;
+}
+
+/**
+ * Display results
+ */
+function displayResults(dogs) {
+    resultsGrid.innerHTML = '';
+
+    if (!dogs || dogs.length === 0) {
+        resultsGrid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #999;">No dogs found</p>';
+        return;
+    }
+
+    dogs.forEach(dog => {
+        const card = document.createElement('div');
+        card.className = 'dog-card';
+
+        const images = dog.images || [dog.image_path];
+        const primaryImage = getImageUrl(images[0]);
+        const date = formatDateDDMMYYYY(new Date(dog.created_at));
+
+        let detailsHtml = '';
+        if (dog.age || dog.adoption_date || dog.location || dog.city) {
+            detailsHtml = '<div class="dog-details">';
+            if (dog.age) detailsHtml += `<div>גיל: ${escapeHtml(dog.age)}</div>`;
+            if (dog.adoption_date) {
+                const adoptDate = formatDateDDMMYYYY(new Date(dog.adoption_date));
+                detailsHtml += `<div>תאריך אימוץ: ${adoptDate}</div>`;
+            }
+            if (dog.location) detailsHtml += `<div>מאיפה אומץ: ${escapeHtml(dog.location)}</div>`;
+            if (dog.city) detailsHtml += `<div>עיר מגורים: ${escapeHtml(dog.city)}</div>`;
+            detailsHtml += '</div>';
+        }
+
+        // Build image container with hover effect if multiple images
+        let imageHtml = '';
+        if (images.length > 1) {
+            imageHtml = `
+                <div class="image-container">
+                    <img src="${primaryImage}" alt="${escapeHtml(dog.name)}" loading="lazy" class="main-image" data-index="0">
+                    <div class="image-gallery">
+                        ${images.map((img, idx) => `
+                            <img src="${getImageUrl(img)}" alt="${escapeHtml(dog.name)}" loading="lazy" data-index="${idx}">
+                        `).join('')}
+                    </div>
+                    <div class="image-count">${images.length} תמונות</div>
+                </div>
+            `;
+        } else {
+            imageHtml = `<img src="${primaryImage}" alt="${escapeHtml(dog.name)}" loading="lazy" data-index="0">`;
+        }
+
+        card.innerHTML = `
+            ${imageHtml}
+            <div class="dog-card-info">
+                <div class="dog-card-name">${escapeHtml(dog.name)}</div>
+                <div class="dog-card-date">${date}</div>
+                ${detailsHtml}
+            </div>
+        `;
+
+        // Add click handlers to all images in the card
+        card.querySelectorAll = card.querySelectorAll || document.querySelectorAll.bind(card);
+        resultsGrid.appendChild(card);
+
+        // Add click handlers after card is in DOM
+        const cardImages = card.querySelectorAll('img');
+        cardImages.forEach((img) => {
+            img.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const index = parseInt(img.getAttribute('data-index')) || 0;
+                openLightbox(images, index);
+            });
+            img.style.cursor = 'pointer';
+        });
+    });
+}
+
+/**
+ * Show loading
+ */
+function showLoading() {
+    loadingEl.style.display = 'block';
+}
+
+/**
+ * Hide loading
+ */
+function hideLoading() {
+    loadingEl.style.display = 'none';
+}
+
+/**
+ * Show error
+ */
+function showError(message) {
+    errorEl.textContent = message;
+    errorEl.style.display = 'block';
+    setTimeout(() => hideError(), 5000);
+}
+
+/**
+ * Hide error
+ */
+function hideError() {
+    errorEl.style.display = 'none';
+}
+
+/**
+ * Show success
+ */
+function showSuccess(message) {
+    successEl.textContent = message;
+    successEl.style.display = 'block';
+    setTimeout(() => {
+        successEl.style.display = 'none';
+    }, 3000);
+}
+
+/**
+ * Escape HTML
+ */
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+/**
+ * Format date as dd/mm/yyyy
+ */
+function formatDateDDMMYYYY(date) {
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+}
+
+/**
+ * Open lightbox with image
+ */
+function openLightbox(images, startIndex) {
+    currentImages = images;
+    currentImageIndex = startIndex;
+    showLightboxImage();
+    lightbox.style.display = 'flex';
+    document.body.style.overflow = 'hidden'; // Prevent scrolling
+}
+
+/**
+ * Close lightbox
+ */
+function closeLightbox() {
+    lightbox.style.display = 'none';
+    document.body.style.overflow = ''; // Restore scrolling
+}
+
+/**
+ * Show current image in lightbox
+ */
+function showLightboxImage() {
+    lightboxImage.src = getImageUrl(currentImages[currentImageIndex]);
+
+    // Show/hide navigation buttons
+    lightboxPrev.style.display = currentImages.length > 1 ? 'block' : 'none';
+    lightboxNext.style.display = currentImages.length > 1 ? 'block' : 'none';
+}
+
+/**
+ * Show previous image
+ */
+function showPrevImage() {
+    currentImageIndex = (currentImageIndex - 1 + currentImages.length) % currentImages.length;
+    showLightboxImage();
+}
+
+/**
+ * Show next image
+ */
+function showNextImage() {
+    currentImageIndex = (currentImageIndex + 1) % currentImages.length;
+    showLightboxImage();
+}
+
+// Lightbox event listeners
+lightboxClose.addEventListener('click', closeLightbox);
+lightbox.addEventListener('click', (e) => {
+    if (e.target === lightbox) {
+        closeLightbox();
+    }
+});
+lightboxPrev.addEventListener('click', showPrevImage);
+lightboxNext.addEventListener('click', showNextImage);
+
+// Keyboard navigation for lightbox
+document.addEventListener('keydown', (e) => {
+    if (lightbox.style.display === 'flex') {
+        if (e.key === 'Escape') closeLightbox();
+        if (e.key === 'ArrowLeft') showPrevImage();
+        if (e.key === 'ArrowRight') showNextImage();
+    }
+});
+
+// Touch/swipe support for mobile
+let touchStartX = 0;
+let touchEndX = 0;
+
+lightbox.addEventListener('touchstart', (e) => {
+    touchStartX = e.changedTouches[0].screenX;
+});
+
+lightbox.addEventListener('touchend', (e) => {
+    touchEndX = e.changedTouches[0].screenX;
+    handleSwipe();
+});
+
+function handleSwipe() {
+    const swipeThreshold = 50;
+    if (touchEndX < touchStartX - swipeThreshold) {
+        showNextImage(); // Swipe left
+    }
+    if (touchEndX > touchStartX + swipeThreshold) {
+        showPrevImage(); // Swipe right
+    }
+}

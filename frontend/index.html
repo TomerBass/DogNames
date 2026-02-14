@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DogFinder</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>🐾 DogFinder</h1>
+        </header>
+
+        <div class="main-content">
+            <!-- Search Component -->
+            <section class="component search-component">
+                <h2>חפש כלבים</h2>
+                <input
+                    type="text"
+                    id="searchInput"
+                    placeholder="חפש לפי שם..."
+                    autocomplete="off"
+                    dir="rtl"
+                >
+            </section>
+
+            <!-- Upload Component -->
+            <section class="component upload-component">
+                <h2>העלה כלב</h2>
+                <form id="uploadForm">
+                    <input
+                        type="text"
+                        id="dogName"
+                        name="name"
+                        placeholder="שם הכלב"
+                        required
+                        dir="rtl"
+                    >
+                    <div id="hebrewWarning" class="hebrew-warning" style="display: none;">
+                        🐶 אנחנו עובדים בעברית בלבד כרגע!
+                    </div>
+                    <input
+                        type="file"
+                        id="dogImage"
+                        name="files"
+                        accept="image/jpeg,image/png,image/gif"
+                        multiple
+                        required
+                    >
+
+                    <button type="button" id="toggleDetails" class="btn-link">+ הוסף פרטים</button>
+
+                    <div id="optionalFields" class="optional-fields" style="display: none;">
+                        <div id="optionalHebrewWarning" class="hebrew-warning" style="display: none;">
+                            🐶 אנחנו עובדים בעברית בלבד כרגע!
+                        </div>
+                        <div class="field-group">
+                            <label for="dogAge">גיל</label>
+                            <input
+                                type="text"
+                                id="dogAge"
+                                name="age"
+                                dir="rtl"
+                            >
+                        </div>
+                        <div class="field-group">
+                            <label for="adoptionDate">תאריך אימוץ</label>
+                            <input
+                                type="date"
+                                id="adoptionDate"
+                                name="adoption_date"
+                            >
+                        </div>
+                        <div class="field-group">
+                            <label for="dogLocation">מאיפה אומץ</label>
+                            <input
+                                type="text"
+                                id="dogLocation"
+                                name="location"
+                                dir="rtl"
+                            >
+                        </div>
+                        <div class="field-group">
+                            <label for="dogCity">עיר מגורים</label>
+                            <input
+                                type="text"
+                                id="dogCity"
+                                name="city"
+                                dir="rtl"
+                            >
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn">העלה</button>
+                </form>
+            </section>
+        </div>
+
+        <!-- Results -->
+        <section class="results">
+            <div id="loadingSpinner" class="loading" style="display: none;">Loading...</div>
+            <div id="errorMessage" class="error" style="display: none;"></div>
+            <div id="successMessage" class="success" style="display: none;"></div>
+            <div id="resultsGrid" class="grid"></div>
+        </section>
+    </div>
+
+    <!-- Lightbox Modal -->
+    <div id="lightbox" class="lightbox" style="display: none;">
+        <span class="lightbox-close">&times;</span>
+        <img id="lightboxImage" class="lightbox-image" src="" alt="">
+        <div class="lightbox-nav">
+            <button id="lightboxPrev" class="lightbox-btn">❮</button>
+            <button id="lightboxNext" class="lightbox-btn">❯</button>
+        </div>
+    </div>
+
+    <!-- TensorFlow.js and MobileNet for dog detection -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.11.0/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.0/dist/mobilenet.min.js"></script>
+
+    <script src="script.js"></script>
+</body>
+</html>
