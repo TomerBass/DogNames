@@ -94,6 +94,14 @@ searchInput.addEventListener('input', () => {
     searchTimeout = setTimeout(handleSearch, 300);
 });
 
+// Search on Enter key press (exact match)
+searchInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+        clearTimeout(searchTimeout);
+        handleSearch(true);  // exact match
+    }
+});
+
 // Upload form
 uploadForm.addEventListener('submit', handleUpload);
 
@@ -181,16 +189,22 @@ async function loadAllDogs() {
 /**
  * Handle search
  */
-async function handleSearch() {
+async function handleSearch(exact = false) {
     const searchTerm = searchInput.value.trim();
 
     try {
         showLoading();
         hideError();
 
-        const url = searchTerm
-            ? `${API_BASE_URL}/api/search?name=${encodeURIComponent(searchTerm)}`
-            : `${API_BASE_URL}/api/dogs`;
+        let url;
+        if (searchTerm) {
+            url = `${API_BASE_URL}/api/search?name=${encodeURIComponent(searchTerm)}`;
+            if (exact) {
+                url += '&exact=true';
+            }
+        } else {
+            url = `${API_BASE_URL}/api/dogs`;
+        }
 
         const response = await fetch(url);
 

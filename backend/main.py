@@ -143,15 +143,21 @@ async def root():
 @app.get("/api/search", response_model=DogSearchResponse)
 async def search_dogs(
     name: Optional[str] = Query(None, description="Dog name to search for"),
+    exact: bool = Query(False, description="Exact match or partial match"),
     db: Session = Depends(get_db)
 ):
     """
     Search for dogs by name (case-insensitive, supports Hebrew and English).
     If no name is provided, returns all dogs.
+    Use exact=true for exact matching, exact=false for partial matching.
     """
     if name:
-        # Case-insensitive search with partial matching
-        dogs = db.query(Dog).filter(Dog.name.ilike(f"%{name}%")).all()
+        if exact:
+            # Exact match search (when Enter is pressed)
+            dogs = db.query(Dog).filter(Dog.name.ilike(name)).all()
+        else:
+            # Partial match search (as you type)
+            dogs = db.query(Dog).filter(Dog.name.ilike(f"%{name}%")).all()
     else:
         # Return all dogs if no search term
         dogs = db.query(Dog).all()
