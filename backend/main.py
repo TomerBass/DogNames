@@ -10,6 +10,10 @@ import json
 from datetime import datetime
 from PIL import Image
 from io import BytesIO
+import pillow_heif
+
+# Register HEIF opener with Pillow
+pillow_heif.register_heif_opener()
 
 from database import init_db, get_db, Dog
 from models import DogResponse, DogSearchResponse, UploadResponse
@@ -55,7 +59,7 @@ if not USE_CLOUDINARY:
     app.mount("/uploads", StaticFiles(directory=UPLOADS_DIR), name="uploads")
 
 # Allowed image extensions
-ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif"}
+ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".heic", ".heif"}
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
 
 
@@ -180,7 +184,8 @@ async def upload_dog(
 ):
     """
     Upload dog photos (multiple) with a name and optional details.
-    Accepts: jpg, jpeg, png, gif (max 5MB per file).
+    Accepts: jpg, jpeg, png, gif, heic, heif (max 5MB per file).
+    HEIC/HEIF images are automatically converted to JPEG.
     Optional fields: age, adoption_date, location, city.
     """
     saved_images = []
@@ -206,12 +211,31 @@ async def upload_dog(
                 detail=f"File {file.filename} too large. Maximum size: {MAX_FILE_SIZE / (1024*1024):.1f}MB"
             )
 
-        # Validate that it's a valid image
+        # Validate and process image (convert HEIC to JPEG if needed)
         try:
             image = Image.open(BytesIO(contents))
-            image.verify()
-        except Exception:
-            raise HTTPException(status_code=400, detail=f"Invalid image file: {file.filename}")
+
+            # Check if it's a HEIC/HEIF file and convert to JPEG
+            if file_ext in {".heic", ".heif"}:
+                # Convert to RGB (HEIC might be in different color mode)
+                if image.mode != "RGB":
+                    image = image.convert("RGB")
+
+                # Save as JPEG in memory
+                jpeg_buffer = BytesIO()
+                image.save(jpeg_buffer, format="JPEG", quality=90)
+                jpeg_buffer.seek(0)
+                contents = jpeg_buffer.read()
+
+                # Update filename to .jpg
+                file.filename = os.path.splitext(file.filename)[0] + ".jpg"
+
+            else:
+                # Validate non-HEIC images
+                image.verify()
+
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Invalid image file: {file.filename} - {str(e)}")
 
         # Save image (to Cloudinary or local storage)
         image_identifier = await save_image(contents, file.filename)
