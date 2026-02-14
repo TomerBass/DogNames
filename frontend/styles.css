@@ -80,6 +80,11 @@ body {
     background: white;
 }
 
+#searchInput::placeholder {
+    font-weight: bold;
+    color: #6d4c41;
+}
+
 #searchInput:focus {
     outline: none;
     border-color: #8d6e63;
