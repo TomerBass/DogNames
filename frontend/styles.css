@@ -215,41 +215,20 @@ body {
     transform: scale(0.95);
 }
 
-/* Dog Name Banner - Bone shape */
+/* Dog Name Banner - Oval shape */
 .dog-name-banner {
-    padding: 16px 32px;
+    padding: 10px 24px;
     margin: 8px auto;
     width: fit-content;
-    min-width: 140px;
+    min-width: 100px;
     text-align: center;
     font-size: 1.2rem;
     font-weight: 700;
     color: black;
     direction: rtl;
     text-shadow: 2px 2px 4px rgba(128, 128, 128, 0.6);
-    border-radius: 40px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-    position: relative;
-}
-
-.dog-name-banner::before,
-.dog-name-banner::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 30px;
-    height: 40px;
     border-radius: 50%;
-    background: inherit;
-}
-
-.dog-name-banner::before {
-    left: -10px;
-}
-
-.dog-name-banner::after {
-    right: -10px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
 .dog-name-banner .paw {
@@ -262,7 +241,7 @@ body {
     height: 200px;
     object-fit: cover;
     object-position: center 40%;
-    border-radius: 8px;
+    border-radius: 0;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
@@ -272,7 +251,7 @@ body {
     width: 100%;
     height: 200px;
     overflow: hidden;
-    border-radius: 8px;
+    border-radius: 0;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
@@ -691,24 +670,10 @@ body {
 
     .dog-name-banner {
         font-size: 0.75rem;
-        padding: 10px 20px;
+        padding: 6px 16px;
         margin: 4px auto;
-        min-width: 90px;
-        border-radius: 25px;
-    }
-
-    .dog-name-banner::before,
-    .dog-name-banner::after {
-        width: 20px;
-        height: 28px;
-    }
-
-    .dog-name-banner::before {
-        left: -7px;
-    }
-
-    .dog-name-banner::after {
-        right: -7px;
+        min-width: 70px;
+        border-radius: 50%;
     }
 
     .dog-name-banner .paw {
