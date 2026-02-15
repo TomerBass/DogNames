@@ -462,7 +462,7 @@ function displayResults(dogs) {
             ${deleteButton}
             ${imageHtml}
             <div class="dog-name-banner" style="background-color: ${bannerColor}">
-                ${escapeHtml(dog.name)}
+                🐾 ${escapeHtml(dog.name)} 🐾
             </div>
         `;
 
