@@ -221,12 +221,17 @@ body {
     width: fit-content;
     text-align: center;
     font-size: 1.2rem;
-    font-weight: 600;
+    font-weight: 700;
     color: black;
     direction: rtl;
-    text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.8);
+    text-shadow: 2px 2px 4px rgba(128, 128, 128, 0.6);
     border-radius: 20px;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.dog-name-banner .paw {
+    font-size: 1.8rem;
+    filter: grayscale(100%) brightness(0);
 }
 
 .dog-card img {
@@ -666,6 +671,10 @@ body {
         padding: 6px 8px;
         margin: 4px auto;
         border-radius: 12px;
+    }
+
+    .dog-name-banner .paw {
+        font-size: 1rem;
     }
 
     .dog-card-name {
