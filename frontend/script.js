@@ -381,7 +381,7 @@ function getImageUrl(imageIdentifier) {
  * Get a random vibrant color for dog name banner
  */
 function getRandomColor() {
-    return '#d68f84'; // Rose/pink bone color for all dog name banners
+    return '#90afd4'; // Blue bone color for all dog name banners
 }
 
 /**
