@@ -381,24 +381,7 @@ function getImageUrl(imageIdentifier) {
  * Get a random vibrant color for dog name banner
  */
 function getRandomColor() {
-    const colors = [
-        '#FF6B6B', // Red
-        '#4ECDC4', // Teal
-        '#45B7D1', // Blue
-        '#FFA07A', // Light Salmon
-        '#98D8C8', // Mint
-        '#F7DC6F', // Yellow
-        '#BB8FCE', // Purple
-        '#85C1E2', // Sky Blue
-        '#F8B88B', // Peach
-        '#ABEBC6', // Light Green
-        '#F06292', // Pink
-        '#FFB74D', // Orange
-        '#81C784', // Green
-        '#64B5F6', // Light Blue
-        '#BA68C8', // Violet
-    ];
-    return colors[Math.floor(Math.random() * colors.length)];
+    return '#b86d43'; // Brown color for all dog name banners
 }
 
 /**
