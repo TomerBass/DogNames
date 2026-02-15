@@ -215,7 +215,7 @@ body {
     transform: scale(0.95);
 }
 
-/* Dog Name Banner - Rounded corners */
+/* Dog Name Banner - Pill shape (matches search banner) */
 .dog-name-banner {
     padding: 12px 24px;
     margin: 8px auto;
@@ -226,8 +226,7 @@ body {
     font-weight: 700;
     color: white;
     direction: rtl;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-    border-radius: 12px;
+    border-radius: 30px;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
@@ -673,7 +672,7 @@ body {
         padding: 6px 12px;
         margin: 4px auto;
         min-width: 60px;
-        border-radius: 8px;
+        border-radius: 20px;
     }
 
     .dog-name-banner .paw {
