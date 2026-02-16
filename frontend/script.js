@@ -232,9 +232,29 @@ async function isDogImage(file) {
     }
 
     return new Promise((resolve) => {
+        // Add timeout to prevent getting stuck
+        const timeout = setTimeout(() => {
+            console.warn('Dog detection timeout, allowing upload');
+            resolve(true);
+        }, 10000); // 10 second timeout
+
         const reader = new FileReader();
+
+        reader.onerror = () => {
+            clearTimeout(timeout);
+            console.error('Error reading file');
+            resolve(true); // On error, allow upload
+        };
+
         reader.onload = async (e) => {
             const img = new Image();
+
+            img.onerror = () => {
+                clearTimeout(timeout);
+                console.error('Error loading image');
+                resolve(true); // On error, allow upload
+            };
+
             img.onload = async () => {
                 try {
                     const predictions = await model.classify(img);
@@ -278,8 +298,10 @@ async function isDogImage(file) {
                         ) && pred.probability > 0.1;
                     });
 
+                    clearTimeout(timeout);
                     resolve(dogRelated || possiblyAnimal);
                 } catch (error) {
+                    clearTimeout(timeout);
                     console.error('Error classifying image:', error);
                     resolve(true); // On error, allow upload
                 }
