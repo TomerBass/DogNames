@@ -43,8 +43,8 @@ body {
 .component h2 {
     font-size: 1.3rem;
     margin-bottom: 20px;
-    color: #6d4c41;
-    font-weight: 500;
+    color: #b86d43;
+    font-weight: 700;
     text-align: right;
     direction: rtl;
 }
@@ -98,21 +98,30 @@ body {
     width: 100%;
     padding: 12px 16px;
     font-size: 1rem;
-    border: 2px solid #d7ccc8;
-    border-radius: 6px;
+    border: 2px solid #b86d43;
+    border-radius: 30px;
+    background: #b86d43;
+    color: white;
+}
+
+#dogName::placeholder {
+    color: white;
+    font-weight: bold;
 }
 
 #dogName:focus {
     outline: none;
-    border-color: #8d6e63;
+    border-color: #9d5a2f;
 }
 
 #dogImage {
-    padding: 10px;
-    border: 2px dashed #d7ccc8;
-    border-radius: 6px;
+    padding: 12px 16px;
+    border: 2px dashed #b86d43;
+    border-radius: 30px;
     cursor: pointer;
-    font-size: 0.9rem;
+    font-size: 1rem;
+    background: #b86d43;
+    color: white;
 }
 
 .btn {
