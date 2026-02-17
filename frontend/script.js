@@ -260,9 +260,8 @@ async function isDogImage(file) {
                     const predictions = await model.classify(img);
                     console.log('Predictions:', predictions);
 
-                    // Check if any prediction includes dog-related terms
-                    // Using very low threshold (0.005 = 0.5%) to be extremely lenient
-                    const dogRelated = predictions.some(pred => {
+                    // Only allow actual dog breeds and dog-specific terms
+                    const isDog = predictions.some(pred => {
                         const className = pred.className.toLowerCase();
                         return (
                             className.includes('dog') ||
@@ -282,24 +281,22 @@ async function isDogImage(file) {
                             className.includes('pug') ||
                             className.includes('labrador') ||
                             className.includes('canine') ||
-                            className.includes('pet') ||
-                            className.includes('animal')
-                        ) && pred.probability > 0.005; // Extremely low threshold (0.5%)
-                    });
-
-                    // Fallback: if it detects any mammal/animal, probably a dog
-                    const possiblyAnimal = predictions.some(pred => {
-                        const className = pred.className.toLowerCase();
-                        return (
-                            className.includes('mammal') ||
-                            className.includes('fur') ||
-                            className.includes('animal') ||
-                            className.includes('creature')
-                        ) && pred.probability > 0.1;
+                            className.includes('samoyed') ||
+                            className.includes('maltese') ||
+                            className.includes('dalmatian') ||
+                            className.includes('boxer') ||
+                            className.includes('chow') ||
+                            className.includes('doberman') ||
+                            className.includes('rottweiler') ||
+                            className.includes('schnauzer') ||
+                            className.includes('shih') ||
+                            className.includes('weimaraner') ||
+                            className.includes('whippet')
+                        ) && pred.probability > 0.15; // 15% threshold - meaningful confidence
                     });
 
                     clearTimeout(timeout);
-                    resolve(dogRelated || possiblyAnimal);
+                    resolve(isDog);
                 } catch (error) {
                     clearTimeout(timeout);
                     console.error('Error classifying image:', error);
